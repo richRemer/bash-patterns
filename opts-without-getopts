@@ -1,0 +1,45 @@
+#!/bin/bash -e
+
+# This script demonstrates a pattern for handling POSIX and GNU style options
+# without relying on the getopts builtin or the GNU getopt command.  The
+# Bash getopts builtin does not have support for long options.  The GNU getopt
+# command is not available on all systems (notably, not on OS X).
+#
+# If code only needs to run on systems with GNU getopt, using that tool should
+# be preferred.  For better cross-platform compatibility, this approach might
+# be more useful.
+
+declare log_file=
+declare verbose=
+
+invalid_option () {
+  echo "$(basename "$0"): option '$1' is not recognized" >&2
+  return 2
+}
+
+missing_value () {
+  echo "$(basename "$0"): option '$1' requires value" >&2
+  return 3
+}
+
+show_help () {
+  echo Help\!
+}
+
+while test $# -gt 0; do
+  case "$1" in
+    -h|-help|-h*) show_help; exit;;
+    --log-file)   log_file="$2"; shift 2 || missing_value "$1";;
+    --log-file=*) log_file="${1#*=}"; shift;;
+    -v|--verbose) verbose=1; shift;;
+    -v*)          verbose=1; set -- -"${1:2}" "${@:2}";;
+    --)           shift; break;;
+    --*)          invalid_option "$1";;
+    -*)           invalid_option "$1";;
+    *)            break;;
+  esac
+done
+
+echo log: $log_file
+echo verbose: $verbose
+echo rest: "$@"
