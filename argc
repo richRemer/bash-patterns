@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+echo -n $# "$1"; shift
+
+while test $# -gt 0; do
+	echo -n ":$1"
+	shift
+done
+
+echo
