@@ -1,0 +1,43 @@
+#!/bin/bash -e
+
+# This script attempts to exhaustively illustrate all the different expansion
+# scenarios for variables and escape found in bash
+
+# backslash for escapes
+echo \n							# prints letter 'n' (literal escape handled by shell)
+echo "\n"						# prints sequence '\' 'n' (escape ignored)
+echo '\n'						# prints sequence '\' 'n' (escape ignored)
+echo $'\n'						# prints a newline (C-style escape handled by shell)
+echo -e "\n"					# prints a newline (C-style escape handled by echo)
+echo -E "\n"					# prints sequence '\' 'n' (explicitly disable C-style escape by echo)
+
+declare -a array=(A B)
+
+echo ${array[@]}				# prints "A B" (expanded by shell to multiple arguments)
+echo ${array[*]}				# prints "A B" (expanded by shell to multiple arguments)
+echo "${array[@]}"				# prints "A B" (expanded by shell to multiple arguments)
+echo "${array[*]}"				# prints "A B" (expanded by shell to single argument)
+
+declare field_data=A,B
+
+( IFS=,; echo $field_data; )	# prints "A B" (expanded by shell to multiple arguments)
+( IFS=,; echo "${array[@]}" )	# prints "A B" (expanded by shell to multiple arguments)
+( IFS=,; echo "${array[*]}" )	# prints "A,B" (expanded by shell to single delimited argument)
+IFS=, echo "${array[*]}"		# prints "A B" (expanded by shell before evaluation of IFS)
+# TODO: read -a example using IFS
+# TODO: compgen -W example using IFS
+
+echo ${field_data@Q}			# prints "'A,B'" (expanded by shell to single quoted argument)
+echo ${array[@]@Q}				# prints "'A' 'B'" (expanded by shell to multiple quoted arguments)
+echo "${array[*]@Q}"			# prints "'A' 'B'" (expanded by shell to single argument of quoted values)
+
+declare text="a\tb"
+
+echo $text						# prints "a\tb" (escape ignored)
+echo "${text@E}";				# prints "a       b" (C-style escape handled by shell)
+
+declare prompt="\d: \h"
+
+echo ${prompt@P}				# prints something like "Fri Jul 18: penguin" (Bash prompt escapes handled by shell)
+
+# TODO: continue from https://stackoverflow.com/questions/40732193/bash-how-to-use-operator-parameter-expansion-parameteroperator
